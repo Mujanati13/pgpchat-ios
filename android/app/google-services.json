@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "420998296457",
+    "project_id": "pgp-chat-3faec",
+    "storage_bucket": "pgp-chat-3faec.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:420998296457:android:87e57e683230eeb0bf2758",
+        "android_client_info": {
+          "package_name": "com.yourdomain.pgpchat"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBBjzGNQTkKFOeHr-uZJRZuypw034gHJMg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
