@@ -1,0 +1,194 @@
+import 'dart:async';
+import 'package:flutter/foundation.dart';
+import '../services/api_service.dart';
+
+class ChatProvider extends ChangeNotifier {
+  final ApiService _api = ApiService();
+
+  List<Map<String, dynamic>> _conversations = [];
+  List<Map<String, dynamic>> _messages = [];
+  bool _isLoading = false;
+  String? _error;
+  Timer? _conversationPollTimer;
+  Timer? _messagePollTimer;
+  String? _currentChatUserId;
+
+  List<Map<String, dynamic>> get conversations => _conversations;
+  List<Map<String, dynamic>> get messages => _messages;
+  bool get isLoading => _isLoading;
+  String? get error => _error;
+
+  // ── Conversations polling ──
+
+  void startConversationPolling() {
+    stopConversationPolling();
+    loadConversations();
+    _conversationPollTimer = Timer.periodic(
+      const Duration(seconds: 5),
+      (_) => _refreshConversations(),
+    );
+  }
+
+  void stopConversationPolling() {
+    _conversationPollTimer?.cancel();
+    _conversationPollTimer = null;
+  }
+
+  Future<void> _refreshConversations() async {
+    try {
+      final result = await _api.getConversations();
+      final updated = List<Map<String, dynamic>>.from(
+          result['conversations'] as List? ?? []);
+      if (!listEquals(_conversations.map((c) => c.toString()).toList(),
+          updated.map((c) => c.toString()).toList())) {
+        _conversations = updated;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  // ── Messages polling ──
+
+  void startMessagePolling(String otherUserId) {
+    stopMessagePolling();
+    _currentChatUserId = otherUserId;
+    loadMessages(otherUserId);
+    _messagePollTimer = Timer.periodic(
+      const Duration(seconds: 3),
+      (_) => _refreshMessages(),
+    );
+  }
+
+  void stopMessagePolling() {
+    _messagePollTimer?.cancel();
+    _messagePollTimer = null;
+    _currentChatUserId = null;
+  }
+
+  Future<void> _refreshMessages() async {
+    if (_currentChatUserId == null) return;
+    try {
+      final result = await _api.getMessages(_currentChatUserId!);
+      final updated = List<Map<String, dynamic>>.from(
+          result['messages'] as List? ?? []);
+      if (updated.length != _messages.length ||
+          (updated.isNotEmpty &&
+              _messages.isNotEmpty &&
+              updated.first['id'] != _messages.first['id'])) {
+        _messages = updated;
+        notifyListeners();
+      }
+    } catch (_) {}
+  }
+
+  Future<void> loadConversations() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final result = await _api.getConversations();
+      _conversations = List<Map<String, dynamic>>.from(
+          result['conversations'] as List? ?? []);
+      _error = null;
+    } on ApiException catch (e) {
+      _error = e.message;
+    } catch (e) {
+      _error = 'Failed to load conversations';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> loadMessages(String otherUserId, {int? before}) async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      final result =
+          await _api.getMessages(otherUserId, before: before);
+      final newMessages = List<Map<String, dynamic>>.from(
+          result['messages'] as List? ?? []);
+      if (before != null) {
+        _messages.addAll(newMessages);
+      } else {
+        _messages = newMessages;
+      }
+      _error = null;
+    } on ApiException catch (e) {
+      _error = e.message;
+    } catch (e) {
+      _error = 'Failed to load messages';
+    }
+
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<bool> sendMessage({
+    required String recipientId,
+    required String encryptedBody,
+    String? signature,
+  }) async {
+    // Display the outgoing encrypted message immediately. The server response
+    // still decides whether it was delivered, but it should not block the UI.
+    final localId = 'local-${DateTime.now().microsecondsSinceEpoch}';
+    final localMessage = <String, dynamic>{
+      'id': localId,
+      'sender_id': '_local_',
+      'recipient_id': recipientId,
+      'encrypted_body': encryptedBody,
+      'signature': signature,
+      'created_at': DateTime.now().toIso8601String(),
+      'is_sending': true,
+    };
+    _messages = [localMessage, ..._messages];
+    notifyListeners();
+
+    try {
+      final result = await _api.sendMessage(
+        recipientId: recipientId,
+        encryptedBody: encryptedBody,
+        signature: signature,
+      );
+      final index = _messages.indexWhere((message) => message['id'] == localId);
+      if (index != -1) {
+        _messages[index] = {
+          ...localMessage,
+          'id': result['id'] ?? localId,
+          'created_at': result['createdAt'] ?? localMessage['created_at'],
+          'is_sending': false,
+        };
+        notifyListeners();
+      }
+      return true;
+    } on ApiException catch (e) {
+      _messages.removeWhere((message) => message['id'] == localId);
+      _error = e.message;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _messages.removeWhere((message) => message['id'] == localId);
+      _error = 'Failed to send message';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  void clearMessages() {
+    _messages = [];
+    notifyListeners();
+  }
+
+  void markRead(String otherUserId) {
+    final idx = _conversations.indexWhere(
+        (c) => c['other_user_id']?.toString() == otherUserId);
+    if (idx != -1 && (_conversations[idx]['unread_count'] ?? 0) != 0) {
+      _conversations[idx] = Map<String, dynamic>.from(_conversations[idx])
+        ..['unread_count'] = 0;
+      notifyListeners();
+    }
+    // Persist to server (best-effort)
+    _api.markConversationRead(otherUserId);
+  }
+}
