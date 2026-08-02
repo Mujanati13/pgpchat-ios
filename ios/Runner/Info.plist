@@ -31,6 +31,10 @@
 		<key>NSAllowsArbitraryLoads</key>
 		<true/>
 	</dict>
+	<key>NSCameraUsageDescription</key>
+	<string>PGP Messenger needs camera access so you can take photos to share in encrypted chats.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>PGP Messenger needs your location while you use the app so you can share it in encrypted chats.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>PGP Messenger needs photo library access so you can choose images to send in encrypted chats.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
