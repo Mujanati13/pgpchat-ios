@@ -508,7 +508,6 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = QT5T7376YR;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_NAME = 1.0.5;
-				FLUTTER_BUILD_NUMBER = 14;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "PGP messenger";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -702,7 +701,6 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = QT5T7376YR;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_NAME = 1.0.5;
-				FLUTTER_BUILD_NUMBER = 14;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "PGP messenger";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -736,7 +734,6 @@
 				"DEVELOPMENT_TEAM[sdk=iphoneos*]" = QT5T7376YR;
 				ENABLE_BITCODE = NO;
 				FLUTTER_BUILD_NAME = 1.0.5;
-				FLUTTER_BUILD_NUMBER = 14;
 				INFOPLIST_FILE = Runner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "PGP messenger";
 				LD_RUNPATH_SEARCH_PATHS = (
