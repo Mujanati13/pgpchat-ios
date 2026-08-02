@@ -14,9 +14,9 @@ workflows:
         script: flutter pub get
       - name: Build iOS IPA
         script: |
-          # App Store Connect currently has build 14 for version 1.0.5.
-          # Codemagic build 1 produces build 15, then increments for every build.
-          UPDATED_BUILD_NUMBER=$((14 + BUILD_NUMBER))
+          # App Store Connect already has build 14 for version 1.0.5.
+          # The offset keeps every Codemagic archive strictly above 14.
+          UPDATED_BUILD_NUMBER=$((15 + BUILD_NUMBER))
           flutter build ipa --release --build-name=1.0.5 --build-number=$UPDATED_BUILD_NUMBER
     artifacts:
       - build/ios/ipa/*.ipa
